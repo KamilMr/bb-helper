@@ -1,15 +1,19 @@
 {
   "name": "bb-scripts",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "bb": "tsx --env-file=.env index.ts"
+  "version": "2.0.0",
+  "description": "Bitbucket CLI tool",
+  "type": "module",
+  "bin": {
+    "bb": "./build/cli.js"
   },
-  "keywords": [],
+  "scripts": {
+    "bb": "tsx --env-file=.env source/cli.tsx",
+    "build": "tsc",
+    "dev": "tsx watch --env-file=.env source/cli.tsx"
+  },
+  "keywords": ["bitbucket", "cli"],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
     "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
