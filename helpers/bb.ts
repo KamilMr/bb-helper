@@ -36,3 +36,35 @@ export const request = async (endpoint: string, options: RequestOptions = {}) =>
   const { stdout } = await execAsync(cmd);
   return JSON.parse(stdout);
 };
+
+interface CreateRepoOptions {
+  workspace: string;
+  slug: string;
+  projectKey?: string;
+  isPrivate?: boolean;
+  description?: string;
+}
+
+export const createRepo = async (options: CreateRepoOptions) => {
+  const { workspace, slug, projectKey, isPrivate = true, description } = options;
+
+  const body: Record<string, unknown> = {
+    scm: "git",
+    is_private: isPrivate,
+  };
+
+  if (projectKey) body.project = { key: projectKey };
+  if (description) body.description = description;
+
+  return request(`/repositories/${workspace}/${slug}`, { method: "POST", body });
+};
+
+export const getUser = () => request("/user");
+
+export const listWorkspaces = () => request("/workspaces");
+
+export const listRepos = (workspace: string) =>
+  request(`/repositories/${workspace}`);
+
+export const deleteRepo = (workspace: string, slug: string) =>
+  request(`/repositories/${workspace}/${slug}`, { method: "DELETE" });
