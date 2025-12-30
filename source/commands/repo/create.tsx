@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Text, Box } from "ink";
 import { TextInput, Select, ConfirmInput, Spinner, Alert, StatusMessage } from "@inkjs/ui";
 import zod from "zod";
@@ -42,13 +42,19 @@ export default function CreateRepo({ options: opts }: Props) {
     setStep("done");
   };
 
+  // Auto-create in JSON mode when all args provided
+  useEffect(() => {
+    if (opts.json && opts.workspace && opts.name && step === "confirm") {
+      handleCreate();
+    }
+  }, [opts.json, opts.workspace, opts.name, step]);
+
   if (opts.json) {
     if (step === "done") return <JsonOutput data={result?.data} error={result?.error} />;
-    if (opts.workspace && opts.name) {
-      handleCreate();
-      return null;
+    if (!opts.workspace || !opts.name) {
+      return <JsonOutput data={null} error="--workspace and --name required for JSON mode" />;
     }
-    return <JsonOutput data={null} error="--workspace and --name required for JSON mode" />;
+    return null; // Wait for useEffect to trigger
   }
 
   if (step === "workspace") {

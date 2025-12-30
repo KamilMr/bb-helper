@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Text, Box } from "ink";
 import { ConfirmInput, Spinner, Alert, StatusMessage } from "@inkjs/ui";
 import zod from "zod";
@@ -24,7 +24,7 @@ type Props = {
 type Step = "confirm" | "deleting" | "done";
 
 export default function DeleteRepo({ options: { json, force }, args: [workspace, slug] }: Props) {
-  const [step, setStep] = useState<Step>(force ? "deleting" : "confirm");
+  const [step, setStep] = useState<Step>("confirm");
   const [result, setResult] = useState<{ success: boolean; error?: string } | null>(null);
 
   const handleDelete = async () => {
@@ -38,15 +38,20 @@ export default function DeleteRepo({ options: { json, force }, args: [workspace,
     setStep("done");
   };
 
-  if (force && step === "deleting" && !result) {
-    handleDelete();
-    return json ? null : <Spinner label="Deleting repository..." />;
-  }
+  // Auto-delete when force flag is set
+  useEffect(() => {
+    if (force && step === "confirm") {
+      handleDelete();
+    }
+  }, [force, step]);
 
   if (json) {
     if (step === "done") return <JsonOutput data={{ deleted: result?.success, workspace, slug }} error={result?.error} />;
-    return null;
+    if (step === "deleting") return null;
+    return null; // Wait for useEffect
   }
+
+  if (step === "deleting") return <Spinner label="Deleting repository..." />;
 
   if (step === "confirm") {
     return (
@@ -63,8 +68,6 @@ export default function DeleteRepo({ options: { json, force }, args: [workspace,
       </Layout>
     );
   }
-
-  if (step === "deleting") return <Spinner label="Deleting repository..." />;
 
   return (
     <Layout>

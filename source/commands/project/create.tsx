@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Text, Box } from "ink";
 import { TextInput, Select, ConfirmInput, Spinner, Alert, StatusMessage } from "@inkjs/ui";
 import zod from "zod";
@@ -43,13 +43,19 @@ export default function CreateProject({ options: opts }: Props) {
     setStep("done");
   };
 
+  // Auto-create in JSON mode when all args provided
+  useEffect(() => {
+    if (opts.json && hasAllArgs && step === "confirm") {
+      handleCreate();
+    }
+  }, [opts.json, hasAllArgs, step]);
+
   if (opts.json) {
     if (step === "done") return <JsonOutput data={result?.data} error={result?.error} />;
-    if (hasAllArgs) {
-      handleCreate();
-      return null;
+    if (!hasAllArgs) {
+      return <JsonOutput data={null} error="--workspace, --name, and --key required for JSON mode" />;
     }
-    return <JsonOutput data={null} error="--workspace, --name, and --key required for JSON mode" />;
+    return null; // Wait for useEffect
   }
 
   if (step === "workspace") {
