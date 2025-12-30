@@ -1,4 +1,4 @@
-import { createRepo, getUser, listWorkspaces, listRepos, deleteRepo } from "./helpers/bb";
+import { createRepo, getUser, listWorkspaces, listRepos, deleteRepo, createProject } from "./helpers/bb";
 
 const [,, command, ...args] = process.argv;
 
@@ -37,6 +37,15 @@ const commands: Record<string, () => Promise<void>> = {
     }
     const result = await deleteRepo(workspace, slug);
     console.log(result || "Deleted");
+  },
+  "create-project": async () => {
+    const [workspace, name, key] = args;
+    if (!workspace || !name || !key) {
+      console.log("Usage: create-project <workspace> <name> <key>");
+      return;
+    }
+    const result = await createProject({ workspace, name, key });
+    console.log(result);
   },
 };
 

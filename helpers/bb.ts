@@ -68,3 +68,19 @@ export const listRepos = (workspace: string) =>
 
 export const deleteRepo = (workspace: string, slug: string) =>
   request(`/repositories/${workspace}/${slug}`, { method: "DELETE" });
+
+interface CreateProjectOptions {
+  workspace: string;
+  name: string;
+  key: string;
+  isPrivate?: boolean;
+}
+
+export const createProject = async (options: CreateProjectOptions) => {
+  const { workspace, name, key, isPrivate = true } = options;
+
+  return request(`/workspaces/${workspace}/projects`, {
+    method: "POST",
+    body: { name, key, is_private: isPrivate },
+  });
+};
