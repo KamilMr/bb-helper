@@ -30,6 +30,8 @@ bb <command>                   # If linked: pnpm link --global
 
 ### Structure
 ```
+docs/
+└── README.md            # CLI usage guide and command reference
 source/
 ├── cli.tsx              # Entry point - Pastel app initialization
 ├── commands/            # Each file = CLI command (file-based routing)
