@@ -42,11 +42,19 @@ export default function CreatePR({ options: opts }: Props) {
   const [dest, setDest] = useState(opts.dest || "");
   const [title, setTitle] = useState(opts.title || "");
   const [result, setResult] = useState<{ success: boolean; data?: PullRequest; error?: string } | null>(null);
+  const [repos, setRepos] = useState<Repository[]>([]);
+  const [loadingRepos, setLoadingRepos] = useState(false);
 
   const { data: workspacesData, loading: loadingWorkspaces } = useApi(() => listWorkspaces());
-  const { data: reposData, loading: loadingRepos } = useApi(() =>
-    workspace ? listRepos(workspace) : Promise.resolve({ values: [], size: 0, page: 1, pagelen: 0 })
-  );
+
+  useEffect(() => {
+    if (step === "repo" && workspace) {
+      setLoadingRepos(true);
+      listRepos(workspace)
+        .then(data => { setRepos(data.values); setLoadingRepos(false); })
+        .catch(() => setLoadingRepos(false));
+    }
+  }, [step, workspace]);
 
   const handleCreate = async () => {
     setStep("creating");
@@ -92,7 +100,7 @@ export default function CreatePR({ options: opts }: Props) {
 
   if (step === "repo") {
     if (loadingRepos) return <Spinner label="Loading repositories..." />;
-    const items = reposData?.values?.map((r: Repository) => ({ label: r.name, value: r.slug })) || [];
+    const items = repos.map((r: Repository) => ({ label: r.name, value: r.slug }));
     return (
       <Layout title="Create Pull Request">
         <Text>Select repository:</Text>
