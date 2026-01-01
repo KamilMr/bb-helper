@@ -61,7 +61,10 @@ export const request = async <T>(endpoint: string, options: RequestOptions = {})
 
   const { stdout } = await execAsync(cmd);
   if (!stdout.trim()) return {} as T;
-  return JSON.parse(stdout);
+
+  const data = JSON.parse(stdout);
+  if (data.type === "error") throw new Error(data.error?.message || "API error");
+  return data;
 };
 
 export const getUser = (): Promise<User> => request<User>("/user");
