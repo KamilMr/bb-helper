@@ -164,10 +164,11 @@ export default function CreatePR({ options: opts }: Props) {
 
   if (step === "creating") return <Spinner label="Creating pull request..." />;
 
+  const prUrl = result?.data?.links?.html?.href;
   return (
     <Layout>
       {result?.success
-        ? <StatusMessage variant="success">Pull request created: {result.data?.links.html.href}</StatusMessage>
+        ? <StatusMessage variant="success">Pull request #{result.data?.id} created{prUrl ? `: ${prUrl}` : ""}</StatusMessage>
         : <Alert variant="error">{result?.error}</Alert>
       }
     </Layout>
