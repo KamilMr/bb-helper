@@ -36,9 +36,11 @@ source/
 │   ├── me.tsx           # bb me
 │   ├── workspaces.tsx   # bb workspaces
 │   ├── repos.tsx        # bb repos <workspace>
-│   └── repo/
-│       ├── create.tsx   # bb repo create
-│       └── delete.tsx   # bb repo delete
+│   ├── repo/
+│   │   ├── create.tsx   # bb repo create
+│   │   └── delete.tsx   # bb repo delete
+│   └── pr/
+│       └── create.tsx   # bb pr create
 ├── services/
 │   └── bitbucket.ts     # API client (uses curl via child_process)
 ├── hooks/
@@ -71,3 +73,8 @@ Requires `.env` with:
 BB_EMAIL=your-email@example.com
 BB_TOKEN=your-api-token
 ```
+
+### Development Workflow
+- Build incrementally with small methods
+- Test each method before committing
+- Use atomic commits for each logical change
