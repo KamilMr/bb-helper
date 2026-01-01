@@ -105,6 +105,15 @@ export const createProject = async (options: CreateProjectOptions): Promise<Proj
 };
 
 // Pull Request methods
+export const listPullRequests = (
+  workspace: string,
+  repoSlug: string,
+  state?: string
+): Promise<PaginatedResponse<PullRequest>> =>
+  request<PaginatedResponse<PullRequest>>(
+    `/repositories/${workspace}/${repoSlug}/pullrequests${state ? `?state=${state}` : ""}`
+  );
+
 export const createPullRequest = (options: CreatePROptions): Promise<PullRequest> => {
   const body: Record<string, unknown> = {
     title: options.title,
