@@ -1,6 +1,6 @@
 import { exec } from "child_process";
 import { promisify } from "util";
-import type { User, Workspace, Repository, Project, PaginatedResponse } from "../types/api.js";
+import type { User, Workspace, Repository, Project, PullRequest, PaginatedResponse } from "../types/api.js";
 
 const execAsync = promisify(exec);
 
@@ -25,6 +25,17 @@ export interface CreateRepoOptions {
   projectKey?: string;
   isPrivate?: boolean;
   description?: string;
+}
+
+export interface CreatePROptions {
+  workspace: string;
+  repoSlug: string;
+  title: string;
+  sourceBranch: string;
+  destinationBranch: string;
+  description?: string;
+  reviewers?: string[];
+  closeSourceBranch?: boolean;
 }
 
 const getAuth = () => {
@@ -87,5 +98,23 @@ export const createProject = async (options: CreateProjectOptions): Promise<Proj
   return request<Project>(`/workspaces/${workspace}/projects`, {
     method: "POST",
     body: { name, key, is_private: isPrivate },
+  });
+};
+
+// Pull Request methods
+export const createPullRequest = (options: CreatePROptions): Promise<PullRequest> => {
+  const body: Record<string, unknown> = {
+    title: options.title,
+    source: { branch: { name: options.sourceBranch } },
+    destination: { branch: { name: options.destinationBranch } },
+  };
+
+  if (options.description) body.description = options.description;
+  if (options.reviewers?.length) body.reviewers = options.reviewers.map(uuid => ({ uuid }));
+  if (options.closeSourceBranch !== undefined) body.close_source_branch = options.closeSourceBranch;
+
+  return request<PullRequest>(`/repositories/${options.workspace}/${options.repoSlug}/pullrequests`, {
+    method: "POST",
+    body,
   });
 };
