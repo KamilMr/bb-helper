@@ -51,6 +51,21 @@ export interface Project {
   };
 }
 
+export interface PullRequest {
+  id: number;
+  title: string;
+  description: string;
+  state: 'OPEN' | 'MERGED' | 'DECLINED' | 'SUPERSEDED';
+  created_on: string;
+  updated_on: string;
+  source: { branch: { name: string }; repository?: { full_name: string } };
+  destination: { branch: { name: string }; repository?: { full_name: string } };
+  author: User;
+  reviewers: User[];
+  close_source_branch: boolean;
+  links: { html: { href: string } };
+}
+
 export interface PaginatedResponse<T> {
   size: number;
   page: number;
