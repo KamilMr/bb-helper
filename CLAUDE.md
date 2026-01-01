@@ -40,6 +40,7 @@ source/
 │   │   ├── create.tsx   # bb repo create
 │   │   └── delete.tsx   # bb repo delete
 │   └── pr/
+│       ├── list.tsx     # bb pr list <workspace> <repo>
 │       └── create.tsx   # bb pr create
 ├── services/
 │   └── bitbucket.ts     # API client (uses curl via child_process)
