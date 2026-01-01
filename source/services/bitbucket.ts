@@ -12,6 +12,20 @@ interface RequestOptions {
   method?: HttpMethod;
   body?: Record<string, unknown>;
 }
+export interface CreateProjectOptions {
+  workspace: string;
+  name: string;
+  key: string;
+  isPrivate?: boolean;
+}
+
+export interface CreateRepoOptions {
+  workspace: string;
+  slug: string;
+  projectKey?: string;
+  isPrivate?: boolean;
+  description?: string;
+}
 
 const getAuth = () => {
   const email = process.env.BB_EMAIL;
@@ -39,14 +53,15 @@ export const request = async <T>(endpoint: string, options: RequestOptions = {})
   return JSON.parse(stdout);
 };
 
-export interface CreateRepoOptions {
-  workspace: string;
-  slug: string;
-  projectKey?: string;
-  isPrivate?: boolean;
-  description?: string;
-}
+export const getUser = (): Promise<User> => request<User>("/user");
 
+export const listRepos = (workspace: string): Promise<PaginatedResponse<Repository>> =>
+  request<PaginatedResponse<Repository>>(`/repositories/${workspace}`);
+
+export const deleteRepo = (workspace: string, slug: string): Promise<void> =>
+  request<void>(`/repositories/${workspace}/${slug}`, { method: "DELETE" });
+
+// Repository 
 export const createRepo = async (options: CreateRepoOptions): Promise<Repository> => {
   const { workspace, slug, projectKey, isPrivate = true, description } = options;
 
@@ -61,24 +76,11 @@ export const createRepo = async (options: CreateRepoOptions): Promise<Repository
   return request<Repository>(`/repositories/${workspace}/${slug}`, { method: "POST", body });
 };
 
-export const getUser = (): Promise<User> => request<User>("/user");
-
+// Workspaces methods 
 export const listWorkspaces = (): Promise<PaginatedResponse<Workspace>> =>
   request<PaginatedResponse<Workspace>>("/workspaces");
 
-export const listRepos = (workspace: string): Promise<PaginatedResponse<Repository>> =>
-  request<PaginatedResponse<Repository>>(`/repositories/${workspace}`);
-
-export const deleteRepo = (workspace: string, slug: string): Promise<void> =>
-  request<void>(`/repositories/${workspace}/${slug}`, { method: "DELETE" });
-
-export interface CreateProjectOptions {
-  workspace: string;
-  name: string;
-  key: string;
-  isPrivate?: boolean;
-}
-
+// Project methods
 export const createProject = async (options: CreateProjectOptions): Promise<Project> => {
   const { workspace, name, key, isPrivate = true } = options;
 
