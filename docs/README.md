@@ -92,7 +92,8 @@ bb pr remove-change-request <workspace> <repo> <id>
 
 # Lifecycle actions
 bb pr decline <workspace> <repo> <id>
-bb pr merge <workspace> <repo> <id> --strategy=squash --message="Merge PR"
+bb pr merge <workspace> <repo> <id> --strategy=squash --message="Merge PR"  # Shows PR details and asks you to type <id>
+bb pr merge <workspace> <repo> <id> --confirm-id=<id> --json              # Scripted/JSON mode
 
 # Comments
 bb pr comment list <workspace> <repo> <id>
@@ -102,7 +103,19 @@ bb pr comment reply <workspace> <repo> <id> <parent-id> --content="Reply"
 bb pr comment delete <workspace> <repo> <id> <comment-id>
 ```
 
-All PR commands accept `--json`. Mutation commands execute immediately, so verify IDs before running decline, merge, or comment deletion.
+All PR commands accept `--json`. Most mutation commands execute immediately, so verify IDs before running decline or comment deletion.
+
+Every merge requires exact PR-ID confirmation. Interactive mode fetches and displays the PR title, author, state, branches, and URL, then asks you to type the positional ID. JSON and other non-interactive uses must pass the same value explicitly with `--confirm-id=<id>`. Missing or mismatched confirmation, including extra whitespace or leading zeroes, exits with an error without merging.
+
+#### PR Merge Options
+
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--confirm-id` | | Exact positional PR ID; required in JSON/non-interactive mode |
+| `--strategy` | | Merge strategy (`merge_commit`, `squash`, or `fast_forward`) |
+| `--message` | `-m` | Merge commit message |
+| `--close-source` | | Close the source branch |
+| `--json` | | JSON output mode |
 
 #### PR Create Options
 

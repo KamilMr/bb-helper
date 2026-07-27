@@ -36,6 +36,10 @@ export const MutationOutput = <T,>({
       });
   }, []);
 
+  useEffect(() => {
+    if (state.status === "error") process.exitCode = 1;
+  }, [state.status]);
+
   if (state.status === "loading") {
     return json ? null : <Spinner label={loadingLabel} />;
   }

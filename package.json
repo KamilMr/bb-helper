@@ -9,6 +9,7 @@
   "scripts": {
     "bb": "tsx --env-file=.env source/cli.tsx",
     "build": "tsc",
+    "test": "tsc && node --test tests/*.test.mjs",
     "dev": "tsx watch --env-file=.env source/cli.tsx"
   },
   "keywords": ["bitbucket", "cli"],

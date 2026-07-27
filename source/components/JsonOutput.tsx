@@ -11,6 +11,7 @@ export const JsonOutput = ({ data, error }: JsonOutputProps) => {
 
   useEffect(() => {
     if (error) {
+      process.exitCode = 1;
       console.log(JSON.stringify({ error }, null, 2));
     } else {
       console.log(JSON.stringify(data, null, 2));

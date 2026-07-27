@@ -48,10 +48,30 @@ export interface MergePROptions {
   workspace: string;
   repoSlug: string;
   pullRequestId: number;
+  confirmation: string;
   message?: string;
   strategy?: string;
   closeSourceBranch?: boolean;
 }
+
+export const getMergeConfirmationError = (
+  pullRequestId: number,
+  confirmation?: string,
+): string | null => {
+  const expected = String(pullRequestId);
+
+  if (confirmation === undefined) {
+    return `Confirmation required: type pull request ID "${expected}" or pass --confirm-id=${expected} for JSON/non-interactive use. Pull request was not merged.`;
+  }
+  if (confirmation === "") {
+    return `Merge cancelled. Pull request #${expected} was not merged.`;
+  }
+  if (confirmation !== expected) {
+    return `Confirmation ${JSON.stringify(confirmation)} does not exactly match pull request ID "${expected}". Pull request was not merged.`;
+  }
+
+  return null;
+};
 
 const getAuthorization = () => {
   const email = process.env.BB_EMAIL;
@@ -60,7 +80,7 @@ const getAuthorization = () => {
   return `Basic ${Buffer.from(`${email}:${token}`).toString("base64")}`;
 };
 
-export const request = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
+const request = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
   const { method = "GET", body } = options;
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     method,
@@ -195,7 +215,10 @@ export const declinePullRequest = (
     method: "POST",
   });
 
-export const mergePullRequest = (options: MergePROptions): Promise<PullRequest> => {
+export const mergePullRequest = async (options: MergePROptions): Promise<PullRequest> => {
+  const confirmationError = getMergeConfirmationError(options.pullRequestId, options.confirmation);
+  if (confirmationError) throw new Error(confirmationError);
+
   const body: Record<string, unknown> = {};
   if (options.message) body.message = options.message;
   if (options.strategy) body.merge_strategy = options.strategy;
