@@ -1,8 +1,13 @@
-import { exec } from "child_process";
-import { promisify } from "util";
-import type { User, Workspace, Repository, Project, PullRequest, PaginatedResponse } from "../types/api.js";
-
-const execAsync = promisify(exec);
+import type {
+  User,
+  Workspace,
+  Repository,
+  Project,
+  PullRequest,
+  PullRequestComment,
+  PullRequestParticipant,
+  PaginatedResponse,
+} from "../types/api.js";
 
 const BASE_URL = "https://api.bitbucket.org/2.0";
 
@@ -10,7 +15,7 @@ type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 interface RequestOptions {
   method?: HttpMethod;
-  body?: Record<string, unknown>;
+  body?: unknown;
 }
 export interface CreateProjectOptions {
   workspace: string;
@@ -36,44 +41,68 @@ export interface CreatePROptions {
   description?: string;
   reviewers?: string[];
   closeSourceBranch?: boolean;
+  draft?: boolean;
 }
 
-const getAuth = () => {
+export interface MergePROptions {
+  workspace: string;
+  repoSlug: string;
+  pullRequestId: number;
+  message?: string;
+  strategy?: string;
+  closeSourceBranch?: boolean;
+}
+
+const getAuthorization = () => {
   const email = process.env.BB_EMAIL;
   const token = process.env.BB_TOKEN;
   if (!email || !token) throw new Error("BB_EMAIL and BB_TOKEN required in .env");
-  return `${email}:${token}`;
+  return `Basic ${Buffer.from(`${email}:${token}`).toString("base64")}`;
 };
 
 export const request = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
   const { method = "GET", body } = options;
-  const url = `${BASE_URL}${endpoint}`;
-  const auth = getAuth();
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
+    method,
+    headers: {
+      Authorization: getAuthorization(),
+      Accept: "application/json",
+      ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
 
-  let cmd = `curl -s -u "${auth}" -X ${method}`;
+  const text = await response.text();
+  let data: unknown;
 
-  if (body) {
-    cmd += ` -H "Content-Type: application/json"`;
-    cmd += ` -d '${JSON.stringify(body)}'`;
+  try {
+    data = text ? JSON.parse(text) : undefined;
+  } catch {
+    data = text;
   }
 
-  cmd += ` "${url}"`;
+  if (!response.ok) {
+    const apiError = data as { error?: { message?: string; detail?: string } } | undefined;
+    const message = apiError?.error?.message || apiError?.error?.detail || response.statusText;
+    throw new Error(`Bitbucket API ${response.status}: ${message}`);
+  }
 
-  const { stdout } = await execAsync(cmd);
-  if (!stdout.trim()) return {} as T;
-
-  const data = JSON.parse(stdout);
-  if (data.type === "error") throw new Error(data.error?.message || "API error");
-  return data;
+  return data as T;
 };
+
+const repositoryPath = (workspace: string, repoSlug: string) =>
+  `/repositories/${encodeURIComponent(workspace)}/${encodeURIComponent(repoSlug)}`;
+
+const pullRequestPath = (workspace: string, repoSlug: string, pullRequestId?: number) =>
+  `${repositoryPath(workspace, repoSlug)}/pullrequests${pullRequestId === undefined ? "" : `/${pullRequestId}`}`;
 
 export const getUser = (): Promise<User> => request<User>("/user");
 
 export const listRepos = (workspace: string): Promise<PaginatedResponse<Repository>> =>
-  request<PaginatedResponse<Repository>>(`/repositories/${workspace}`);
+  request<PaginatedResponse<Repository>>(`/repositories/${encodeURIComponent(workspace)}?pagelen=100`);
 
 export const deleteRepo = (workspace: string, slug: string): Promise<void> =>
-  request<void>(`/repositories/${workspace}/${slug}`, { method: "DELETE" });
+  request<void>(repositoryPath(workspace, slug), { method: "DELETE" });
 
 // Repository 
 export const createRepo = async (options: CreateRepoOptions): Promise<Repository> => {
@@ -87,7 +116,7 @@ export const createRepo = async (options: CreateRepoOptions): Promise<Repository
   if (projectKey) body.project = { key: projectKey };
   if (description) body.description = description;
 
-  return request<Repository>(`/repositories/${workspace}/${slug}`, { method: "POST", body });
+  return request<Repository>(repositoryPath(workspace, slug), { method: "POST", body });
 };
 
 // Workspaces methods 
@@ -109,10 +138,17 @@ export const listPullRequests = (
   workspace: string,
   repoSlug: string,
   state?: string
-): Promise<PaginatedResponse<PullRequest>> =>
-  request<PaginatedResponse<PullRequest>>(
-    `/repositories/${workspace}/${repoSlug}/pullrequests${state ? `?state=${state}` : ""}`
-  );
+): Promise<PaginatedResponse<PullRequest>> => {
+  const query = new URLSearchParams({ pagelen: "100" });
+  if (state) query.set("state", state);
+  return request<PaginatedResponse<PullRequest>>(`${pullRequestPath(workspace, repoSlug)}?${query}`);
+};
+
+export const getPullRequest = (
+  workspace: string,
+  repoSlug: string,
+  pullRequestId: number,
+): Promise<PullRequest> => request<PullRequest>(pullRequestPath(workspace, repoSlug, pullRequestId));
 
 export const createPullRequest = (options: CreatePROptions): Promise<PullRequest> => {
   const body: Record<string, unknown> = {
@@ -124,9 +160,115 @@ export const createPullRequest = (options: CreatePROptions): Promise<PullRequest
   if (options.description) body.description = options.description;
   if (options.reviewers?.length) body.reviewers = options.reviewers.map(uuid => ({ uuid }));
   if (options.closeSourceBranch !== undefined) body.close_source_branch = options.closeSourceBranch;
+  if (options.draft !== undefined) body.draft = options.draft;
 
-  return request<PullRequest>(`/repositories/${options.workspace}/${options.repoSlug}/pullrequests`, {
+  return request<PullRequest>(pullRequestPath(options.workspace, options.repoSlug), {
     method: "POST",
     body,
   });
 };
+
+export const approvePullRequest = (
+  workspace: string,
+  repoSlug: string,
+  pullRequestId: number,
+): Promise<PullRequestParticipant> =>
+  request<PullRequestParticipant>(`${pullRequestPath(workspace, repoSlug, pullRequestId)}/approve`, {
+    method: "POST",
+  });
+
+export const unapprovePullRequest = (
+  workspace: string,
+  repoSlug: string,
+  pullRequestId: number,
+): Promise<void> =>
+  request<void>(`${pullRequestPath(workspace, repoSlug, pullRequestId)}/approve`, {
+    method: "DELETE",
+  });
+
+export const declinePullRequest = (
+  workspace: string,
+  repoSlug: string,
+  pullRequestId: number,
+): Promise<PullRequest> =>
+  request<PullRequest>(`${pullRequestPath(workspace, repoSlug, pullRequestId)}/decline`, {
+    method: "POST",
+  });
+
+export const mergePullRequest = (options: MergePROptions): Promise<PullRequest> => {
+  const body: Record<string, unknown> = {};
+  if (options.message) body.message = options.message;
+  if (options.strategy) body.merge_strategy = options.strategy;
+  if (options.closeSourceBranch !== undefined) body.close_source_branch = options.closeSourceBranch;
+
+  return request<PullRequest>(
+    `${pullRequestPath(options.workspace, options.repoSlug, options.pullRequestId)}/merge`,
+    { method: "POST", body },
+  );
+};
+
+export const requestPullRequestChanges = (
+  workspace: string,
+  repoSlug: string,
+  pullRequestId: number,
+): Promise<PullRequestParticipant> =>
+  request<PullRequestParticipant>(
+    `${pullRequestPath(workspace, repoSlug, pullRequestId)}/request-changes`,
+    { method: "POST" },
+  );
+
+export const removePullRequestChangeRequest = (
+  workspace: string,
+  repoSlug: string,
+  pullRequestId: number,
+): Promise<void> =>
+  request<void>(`${pullRequestPath(workspace, repoSlug, pullRequestId)}/request-changes`, {
+    method: "DELETE",
+  });
+
+export const listPullRequestComments = (
+  workspace: string,
+  repoSlug: string,
+  pullRequestId: number,
+): Promise<PaginatedResponse<PullRequestComment>> =>
+  request<PaginatedResponse<PullRequestComment>>(
+    `${pullRequestPath(workspace, repoSlug, pullRequestId)}/comments?pagelen=100`,
+  );
+
+export const addPullRequestComment = (
+  workspace: string,
+  repoSlug: string,
+  pullRequestId: number,
+  content: string,
+  parentId?: number,
+): Promise<PullRequestComment> => {
+  const body: Record<string, unknown> = { content: { raw: content } };
+  if (parentId !== undefined) body.parent = { id: parentId };
+
+  return request<PullRequestComment>(
+    `${pullRequestPath(workspace, repoSlug, pullRequestId)}/comments`,
+    { method: "POST", body },
+  );
+};
+
+export const editPullRequestComment = (
+  workspace: string,
+  repoSlug: string,
+  pullRequestId: number,
+  commentId: number,
+  content: string,
+): Promise<PullRequestComment> =>
+  request<PullRequestComment>(
+    `${pullRequestPath(workspace, repoSlug, pullRequestId)}/comments/${commentId}`,
+    { method: "PUT", body: { content: { raw: content } } },
+  );
+
+export const deletePullRequestComment = (
+  workspace: string,
+  repoSlug: string,
+  pullRequestId: number,
+  commentId: number,
+): Promise<void> =>
+  request<void>(`${pullRequestPath(workspace, repoSlug, pullRequestId)}/comments/${commentId}`, {
+    method: "DELETE",
+  });

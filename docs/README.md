@@ -77,11 +77,32 @@ bb pr list <workspace> <repo> --state=MERGED
 bb pr list <workspace> <repo> --state=DECLINED
 bb pr list <workspace> <repo> --json          # JSON output
 
-# Create PR
+# Inspect and create PRs
+bb pr view <workspace> <repo> <id>
 bb pr create                      # Interactive mode
 bb pr create -w <workspace> -r <repo> -s <source-branch> -d <dest-branch> -t "Title"
-bb pr create --description="PR description" --close-source
+bb pr create --description="PR description" --reviewers="{uuid-1},{uuid-2}" --draft
+bb pr create --close-source
+
+# Review actions
+bb pr approve <workspace> <repo> <id>
+bb pr unapprove <workspace> <repo> <id>
+bb pr request-changes <workspace> <repo> <id>
+bb pr remove-change-request <workspace> <repo> <id>
+
+# Lifecycle actions
+bb pr decline <workspace> <repo> <id>
+bb pr merge <workspace> <repo> <id> --strategy=squash --message="Merge PR"
+
+# Comments
+bb pr comment list <workspace> <repo> <id>
+bb pr comment add <workspace> <repo> <id> --content="Review note"
+bb pr comment edit <workspace> <repo> <id> <comment-id> --content="Updated note"
+bb pr comment reply <workspace> <repo> <id> <parent-id> --content="Reply"
+bb pr comment delete <workspace> <repo> <id> <comment-id>
 ```
+
+All PR commands accept `--json`. Mutation commands execute immediately, so verify IDs before running decline, merge, or comment deletion.
 
 #### PR Create Options
 
@@ -93,6 +114,8 @@ bb pr create --description="PR description" --close-source
 | `--dest` | `-d` | Destination branch |
 | `--title` | `-t` | PR title |
 | `--description` | | PR description |
+| `--reviewers` | | Comma-separated Bitbucket user UUIDs |
+| `--draft` | | Create the PR as a draft |
 | `--close-source` | | Close source branch on merge |
 | `--json` | | JSON output mode |
 

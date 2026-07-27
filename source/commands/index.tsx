@@ -15,6 +15,7 @@ export default function Index() {
         <Text>  <Text color="cyan">repo create</Text> - Create a new repository</Text>
         <Text>  <Text color="cyan">repo delete</Text> - Delete a repository</Text>
         <Text>  <Text color="cyan">project create</Text> - Create a new project</Text>
+        <Text>  <Text color="cyan">pr</Text>          - Create, review, merge, and comment on pull requests</Text>
       </Box>
       <Box marginTop={1}>
         <Text dimColor>Use --json flag with any command for agent-friendly output</Text>

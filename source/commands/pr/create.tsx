@@ -3,10 +3,9 @@ import { Text, Box } from "ink";
 import { TextInput, Select, ConfirmInput, Spinner, Alert, StatusMessage } from "@inkjs/ui";
 import zod from "zod";
 import { option } from "pastel";
-import { createPullRequest, listWorkspaces, listRepos } from "../../services/bitbucket.js";
-import { useApi } from "../../hooks/useApi.js";
+import { createPullRequest, listRepos } from "../../services/bitbucket.js";
 import { Layout, JsonOutput } from "../../components/index.js";
-import type { Workspace, Repository, PullRequest } from "../../types/api.js";
+import type { Repository, PullRequest } from "../../types/api.js";
 
 export const options = zod.object({
   workspace: zod.string().optional().describe(option({ description: "Workspace slug", alias: "w" })),
@@ -15,7 +14,9 @@ export const options = zod.object({
   dest: zod.string().optional().describe(option({ description: "Destination branch", alias: "d" })),
   title: zod.string().optional().describe(option({ description: "PR title", alias: "t" })),
   description: zod.string().optional().describe(option({ description: "PR description" })),
+  reviewers: zod.string().optional().describe(option({ description: "Comma-separated reviewer UUIDs" })),
   closeSource: zod.boolean().default(false).describe(option({ description: "Close source branch on merge" })),
+  draft: zod.boolean().default(false).describe(option({ description: "Create as draft" })),
   json: zod.boolean().default(false).describe("Output as JSON for agents"),
 });
 
@@ -45,8 +46,6 @@ export default function CreatePR({ options: opts }: Props) {
   const [repos, setRepos] = useState<Repository[]>([]);
   const [loadingRepos, setLoadingRepos] = useState(false);
 
-  const { data: workspacesData, loading: loadingWorkspaces } = useApi(() => listWorkspaces());
-
   useEffect(() => {
     if (step === "repo" && workspace) {
       setLoadingRepos(true);
@@ -66,7 +65,9 @@ export default function CreatePR({ options: opts }: Props) {
         sourceBranch: source,
         destinationBranch: dest,
         description: opts.description,
+        reviewers: opts.reviewers?.split(",").map(value => value.trim()).filter(Boolean),
         closeSourceBranch: opts.closeSource,
+        draft: opts.draft,
       });
       setResult({ success: true, data: pr });
     } catch (err) {
@@ -88,12 +89,12 @@ export default function CreatePR({ options: opts }: Props) {
   }
 
   if (step === "workspace") {
-    if (loadingWorkspaces) return <Spinner label="Loading workspaces..." />;
-    const items = workspacesData?.values?.map((w: Workspace) => ({ label: w.name, value: w.slug })) || [];
     return (
       <Layout title="Create Pull Request">
-        <Text>Select workspace:</Text>
-        <Select options={items} onChange={(val) => { setWorkspace(val); setStep("repo"); }} />
+        <Box flexDirection="column" gap={1}>
+          <Text>Workspace slug:</Text>
+          <TextInput placeholder="my-workspace" onSubmit={(val) => { setWorkspace(val); setStep("repo"); }} />
+        </Box>
       </Layout>
     );
   }
@@ -152,6 +153,8 @@ export default function CreatePR({ options: opts }: Props) {
           <Text><Text bold>Destination:</Text> {dest}</Text>
           <Text><Text bold>Title:</Text> {title}</Text>
           {opts.description && <Text><Text bold>Description:</Text> {opts.description}</Text>}
+          {opts.reviewers && <Text><Text bold>Reviewer UUIDs:</Text> {opts.reviewers}</Text>}
+          <Text><Text bold>Draft:</Text> {opts.draft ? "Yes" : "No"}</Text>
           <Text><Text bold>Close source branch:</Text> {opts.closeSource ? "Yes" : "No"}</Text>
           <Box marginTop={1}>
             <Text>Create this pull request? </Text>

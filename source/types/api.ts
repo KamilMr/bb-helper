@@ -51,18 +51,43 @@ export interface Project {
   };
 }
 
+export interface PullRequestParticipant {
+  user: User;
+  role: "PARTICIPANT" | "REVIEWER";
+  approved: boolean;
+  state?: "approved" | "changes_requested" | null;
+  participated_on?: string;
+}
+
 export interface PullRequest {
   id: number;
   title: string;
   description: string;
-  state: 'OPEN' | 'MERGED' | 'DECLINED' | 'SUPERSEDED';
+  state: "OPEN" | "MERGED" | "DECLINED" | "SUPERSEDED";
+  draft?: boolean;
   created_on: string;
   updated_on: string;
   source: { branch: { name: string }; repository?: { full_name: string } };
   destination: { branch: { name: string }; repository?: { full_name: string } };
   author: User;
   reviewers: User[];
+  participants?: PullRequestParticipant[];
   close_source_branch: boolean;
+  links: { html: { href: string } };
+}
+
+export interface PullRequestComment {
+  id: number;
+  parent?: { id: number };
+  content: {
+    raw: string;
+    markup?: string;
+    html?: string;
+  };
+  user: User;
+  created_on: string;
+  updated_on: string;
+  deleted: boolean;
   links: { html: { href: string } };
 }
 
