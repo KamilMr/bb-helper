@@ -2,20 +2,16 @@ import React from "react";
 import { Box, Text } from "ink";
 import { Alert } from "@inkjs/ui";
 import zod from "zod";
-import { argument } from "pastel";
+import { jsonOption, pullRequestArguments } from "../../schemas/command.js";
 import { getPullRequest } from "../../services/bitbucket.js";
 import { useApi } from "../../hooks/useApi.js";
 import { JsonOutput, Layout, LoadingState } from "../../components/index.js";
 
 export const options = zod.object({
-  json: zod.boolean().default(false).describe("Output as JSON for agents"),
+  json: jsonOption,
 });
 
-export const args = zod.tuple([
-  zod.string().describe(argument({ name: "workspace", description: "Workspace slug" })),
-  zod.string().describe(argument({ name: "repo", description: "Repository slug" })),
-  zod.coerce.number().int().positive().describe(argument({ name: "id", description: "Pull request ID" })),
-]);
+export const args = zod.tuple(pullRequestArguments);
 
 type Props = { options: zod.infer<typeof options>; args: zod.infer<typeof args> };
 

@@ -3,6 +3,7 @@ import { Text, Box } from "ink";
 import { TextInput, Select, ConfirmInput, Spinner, Alert, StatusMessage } from "@inkjs/ui";
 import zod from "zod";
 import { option } from "pastel";
+import { jsonOption } from "../../schemas/command.js";
 import { createProject, listWorkspaces } from "../../services/bitbucket.js";
 import { useApi } from "../../hooks/useApi.js";
 import { Layout, JsonOutput } from "../../components/index.js";
@@ -13,7 +14,7 @@ export const options = zod.object({
   name: zod.string().optional().describe(option({ description: "Project name", alias: "n" })),
   key: zod.string().optional().describe(option({ description: "Project key", alias: "k" })),
   private: zod.boolean().default(true).describe(option({ description: "Make project private" })),
-  json: zod.boolean().default(false).describe("Output as JSON for agents"),
+  json: jsonOption,
 });
 
 type Props = {

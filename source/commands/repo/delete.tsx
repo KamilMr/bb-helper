@@ -3,16 +3,17 @@ import { Text, Box } from "ink";
 import { ConfirmInput, Spinner, Alert, StatusMessage } from "@inkjs/ui";
 import zod from "zod";
 import { argument } from "pastel";
+import { jsonOption, workspaceArgument } from "../../schemas/command.js";
 import { deleteRepo } from "../../services/bitbucket.js";
 import { Layout, JsonOutput } from "../../components/index.js";
 
 export const options = zod.object({
-  json: zod.boolean().default(false).describe("Output as JSON for agents"),
+  json: jsonOption,
   force: zod.boolean().default(false).describe("Skip confirmation prompt"),
 });
 
 export const args = zod.tuple([
-  zod.string().describe(argument({ name: "workspace", description: "Workspace slug" })),
+  workspaceArgument,
   zod.string().describe(argument({ name: "slug", description: "Repository slug" })),
 ]);
 

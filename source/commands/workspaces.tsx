@@ -1,13 +1,14 @@
 import React from "react";
 import { Alert } from "@inkjs/ui";
 import zod from "zod";
+import { jsonOption } from "../schemas/command.js";
 import { listWorkspaces } from "../services/bitbucket.js";
 import { useApi } from "../hooks/useApi.js";
 import { Layout, LoadingState, Table, JsonOutput } from "../components/index.js";
 import type { Workspace } from "../types/api.js";
 
 export const options = zod.object({
-  json: zod.boolean().default(false).describe("Output as JSON for agents"),
+  json: jsonOption,
 });
 
 type Props = {

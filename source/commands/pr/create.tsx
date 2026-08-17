@@ -3,6 +3,7 @@ import { Text, Box } from "ink";
 import { TextInput, Select, ConfirmInput, Spinner, Alert, StatusMessage } from "@inkjs/ui";
 import zod from "zod";
 import { option } from "pastel";
+import { jsonOption } from "../../schemas/command.js";
 import { createPullRequest, listRepos } from "../../services/bitbucket.js";
 import { Layout, JsonOutput } from "../../components/index.js";
 import type { Repository, PullRequest } from "../../types/api.js";
@@ -17,7 +18,7 @@ export const options = zod.object({
   reviewers: zod.string().optional().describe(option({ description: "Comma-separated reviewer UUIDs" })),
   closeSource: zod.boolean().default(false).describe(option({ description: "Close source branch on merge" })),
   draft: zod.boolean().default(false).describe(option({ description: "Create as draft" })),
-  json: zod.boolean().default(false).describe("Output as JSON for agents"),
+  json: jsonOption,
 });
 
 type Props = {
