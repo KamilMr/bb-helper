@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Box, Text } from "ink";
 import { Alert, Spinner, TextInput } from "@inkjs/ui";
 import zod from "zod";
-import { jsonOption } from "../../schemas/command.js";
-import { argument, option } from "pastel";
+import { option } from "pastel";
+import { jsonOption, pullRequestArguments } from "../../schemas/command.js";
 import {
   getMergeConfirmationError,
   getPullRequest,
@@ -19,11 +19,7 @@ export const options = zod.object({
   confirmId: zod.string().optional().describe(option({ description: "Confirm by repeating the PR ID (required for JSON/non-interactive use)" })),
   json: jsonOption,
 });
-export const args = zod.tuple([
-  zod.string().describe(argument({ name: "workspace", description: "Workspace slug" })),
-  zod.string().describe(argument({ name: "repo", description: "Repository slug" })),
-  zod.coerce.number().int().positive().describe(argument({ name: "id", description: "Pull request ID" })),
-]);
+export const args = zod.tuple(pullRequestArguments);
 type Props = { options: zod.infer<typeof options>; args: zod.infer<typeof args> };
 type MergeOptions = Omit<Props["options"], "confirmId" | "json">;
 

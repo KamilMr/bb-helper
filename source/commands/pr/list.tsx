@@ -2,8 +2,8 @@ import React from "react";
 import { Text } from "ink";
 import { Alert } from "@inkjs/ui";
 import zod from "zod";
-import { jsonOption } from "../../schemas/command.js";
-import { argument, option } from "pastel";
+import { option } from "pastel";
+import { jsonOption, repositoryArguments } from "../../schemas/command.js";
 import { listPullRequests } from "../../services/bitbucket.js";
 import { useApi } from "../../hooks/useApi.js";
 import { Layout, LoadingState, Table, JsonOutput } from "../../components/index.js";
@@ -14,10 +14,7 @@ export const options = zod.object({
   json: jsonOption,
 });
 
-export const args = zod.tuple([
-  zod.string().describe(argument({ name: "workspace", description: "Workspace slug" })),
-  zod.string().describe(argument({ name: "repo", description: "Repository slug" })),
-]);
+export const args = zod.tuple(repositoryArguments);
 
 type Props = {
   options: zod.infer<typeof options>;
