@@ -2,6 +2,7 @@ import React from "react";
 import { Text } from "ink";
 import { Alert } from "@inkjs/ui";
 import zod from "zod";
+import { jsonOption } from "../../schemas/command.js";
 import { argument, option } from "pastel";
 import { listPullRequests } from "../../services/bitbucket.js";
 import { useApi } from "../../hooks/useApi.js";
@@ -10,7 +11,7 @@ import type { PullRequest } from "../../types/api.js";
 
 export const options = zod.object({
   state: zod.string().optional().describe(option({ description: "Filter by state (OPEN, MERGED, DECLINED)", alias: "s" })),
-  json: zod.boolean().default(false).describe("Output as JSON for agents"),
+  json: jsonOption,
 });
 
 export const args = zod.tuple([

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Text } from "ink";
 import { Alert, Spinner, TextInput } from "@inkjs/ui";
 import zod from "zod";
+import { jsonOption } from "../../schemas/command.js";
 import { argument, option } from "pastel";
 import {
   getMergeConfirmationError,
@@ -16,7 +17,7 @@ export const options = zod.object({
   message: zod.string().optional().describe(option({ description: "Merge commit message", alias: "m" })),
   closeSource: zod.boolean().optional().describe(option({ description: "Close the source branch" })),
   confirmId: zod.string().optional().describe(option({ description: "Confirm by repeating the PR ID (required for JSON/non-interactive use)" })),
-  json: zod.boolean().default(false).describe("Output as JSON for agents"),
+  json: jsonOption,
 });
 export const args = zod.tuple([
   zod.string().describe(argument({ name: "workspace", description: "Workspace slug" })),

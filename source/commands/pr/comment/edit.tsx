@@ -1,12 +1,13 @@
 import React from "react";
 import zod from "zod";
+import { jsonOption } from "../../../schemas/command.js";
 import { argument, option } from "pastel";
 import { editPullRequestComment } from "../../../services/bitbucket.js";
 import { MutationOutput } from "../../../components/index.js";
 
 export const options = zod.object({
   content: zod.string().min(1).describe(option({ description: "Replacement comment text", alias: "c" })),
-  json: zod.boolean().default(false).describe("Output as JSON for agents"),
+  json: jsonOption,
 });
 export const args = zod.tuple([
   zod.string().describe(argument({ name: "workspace", description: "Workspace slug" })),

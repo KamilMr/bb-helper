@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Text, Box } from "ink";
 import { ConfirmInput, Spinner, Alert, StatusMessage } from "@inkjs/ui";
 import zod from "zod";
+import { jsonOption } from "../../schemas/command.js";
 import { argument } from "pastel";
 import { deleteRepo } from "../../services/bitbucket.js";
 import { Layout, JsonOutput } from "../../components/index.js";
 
 export const options = zod.object({
-  json: zod.boolean().default(false).describe("Output as JSON for agents"),
+  json: jsonOption,
   force: zod.boolean().default(false).describe("Skip confirmation prompt"),
 });
 

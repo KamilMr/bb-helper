@@ -2,12 +2,13 @@ import React from "react";
 import { Text } from "ink";
 import { Alert } from "@inkjs/ui";
 import zod from "zod";
+import { jsonOption } from "../../../schemas/command.js";
 import { argument } from "pastel";
 import { listPullRequestComments } from "../../../services/bitbucket.js";
 import { useApi } from "../../../hooks/useApi.js";
 import { JsonOutput, Layout, LoadingState, Table } from "../../../components/index.js";
 
-export const options = zod.object({ json: zod.boolean().default(false).describe("Output as JSON for agents") });
+export const options = zod.object({ json: jsonOption });
 export const args = zod.tuple([
   zod.string().describe(argument({ name: "workspace", description: "Workspace slug" })),
   zod.string().describe(argument({ name: "repo", description: "Repository slug" })),

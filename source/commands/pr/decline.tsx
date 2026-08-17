@@ -1,10 +1,11 @@
 import React from "react";
 import zod from "zod";
+import { jsonOption } from "../../schemas/command.js";
 import { argument } from "pastel";
 import { declinePullRequest } from "../../services/bitbucket.js";
 import { MutationOutput } from "../../components/index.js";
 
-export const options = zod.object({ json: zod.boolean().default(false).describe("Output as JSON for agents") });
+export const options = zod.object({ json: jsonOption });
 export const args = zod.tuple([
   zod.string().describe(argument({ name: "workspace", description: "Workspace slug" })),
   zod.string().describe(argument({ name: "repo", description: "Repository slug" })),
