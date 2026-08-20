@@ -82,7 +82,8 @@ const getAuthorization = () => {
 
 const request = async <T>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
   const { method = "GET", body } = options;
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  const url = endpoint.startsWith(`${BASE_URL}/`) ? endpoint : `${BASE_URL}${endpoint}`;
+  const response = await fetch(url, {
     method,
     headers: {
       Authorization: getAuthorization(),
@@ -154,14 +155,27 @@ export const createProject = async (options: CreateProjectOptions): Promise<Proj
 };
 
 // Pull Request methods
-export const listPullRequests = (
+export const listPullRequests = async (
   workspace: string,
   repoSlug: string,
   state?: string
 ): Promise<PaginatedResponse<PullRequest>> => {
-  const query = new URLSearchParams({ pagelen: "100" });
+  const query = new URLSearchParams({ pagelen: "50" });
   if (state) query.set("state", state);
-  return request<PaginatedResponse<PullRequest>>(`${pullRequestPath(workspace, repoSlug)}?${query}`);
+
+  const firstPage = await request<PaginatedResponse<PullRequest>>(
+    `${pullRequestPath(workspace, repoSlug)}?${query}`,
+  );
+  const values = [...firstPage.values];
+  let next = firstPage.next;
+
+  while (next) {
+    const page = await request<PaginatedResponse<PullRequest>>(next);
+    values.push(...page.values);
+    next = page.next;
+  }
+
+  return { ...firstPage, values, next: undefined };
 };
 
 export const getPullRequest = (
