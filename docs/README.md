@@ -1,6 +1,8 @@
-# BB Scripts - Bitbucket CLI
+# BB Scripts — Internal Bitbucket CLI Helper
 
-A command-line interface for Bitbucket built with React/Ink for terminal UI.
+An internal command-line helper for common Bitbucket Cloud workflows. It provides an interactive terminal UI for people and JSON output for scripts and agents.
+
+The tool is intentionally focused on routine repository, project, and pull-request tasks. It is not intended to replace the full Bitbucket web interface or support every Bitbucket API.
 
 ## Installation
 
