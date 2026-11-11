@@ -4,41 +4,73 @@ An internal command-line helper for common Bitbucket Cloud workflows. It provide
 
 The tool is intentionally focused on routine repository, project, and pull-request tasks. It is not intended to replace the full Bitbucket web interface or support every Bitbucket API.
 
-## Installation
+## What It Does
+
+- Shows the authenticated Bitbucket user.
+- Lists workspaces, repositories, pull requests, and pull-request comments.
+- Creates projects, repositories, and pull requests; deletes repositories.
+- Approves, unapproves, declines, and merges pull requests; manages change requests.
+- Adds, edits, replies to, and deletes pull-request comments.
+- Supports interactive terminal output and machine-readable JSON.
+
+## Known Limitations
+
+- Workspace, repository, and comment listings only return the first API page. Pull-request listings are fully paginated.
+- `repo delete --json` does not complete unless `--force` is also supplied.
+- Failure handling is inconsistent: some interactive errors exit with status `0`, some selector-loading errors are hidden, and advertised option values are not always validated locally.
+- API requests have no timeout, retry policy, or explicit rate-limit handling.
+- Runtime configuration and regression coverage are limited: the globally linked CLI does not load `.env` automatically, tests cover only merge confirmation and PR pagination, and no CI quality gate runs them.
+
+## Stability Work
+
+This work only hardens existing behavior; it does not add Bitbucket features.
+
+1. **Make command outcomes deterministic.** Ensure every command terminates, emits exactly one JSON result in JSON mode, returns a non-zero status on failure, and displays loading errors. Cover the repository deletion hang and shared output behavior with tests.
+2. **Harden the HTTP client.** Add request timeouts, clearer network and response errors, and bounded retries for safe read requests on rate limits or transient server failures. Never retry mutations automatically.
+3. **Complete pagination for existing list commands.** Reuse one pagination helper for workspaces, repositories, pull requests, and comments, with protection against repeated or malformed next-page links.
+4. **Validate current inputs and startup configuration.** Restrict documented states and merge strategies to supported values, reject empty identifiers, fail early when credentials are missing, and make development versus globally linked environment loading explicit.
+5. **Establish regression gates.** Add service and CLI tests for every command group, success and failure exit codes, JSON output, pagination, timeout behavior, and mutation payloads. Run the build and test suite in CI.
+
+## Quick Start
+
+Install dependencies and create the development environment file:
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Build
-pnpm build
-
-# Link globally (optional)
-pnpm link --global
+cp .env.example .env
 ```
 
-## Configuration
+Set your Bitbucket credentials in `.env`:
 
-Create a `.env` file in the project root:
-
-```
+```dotenv
 BB_EMAIL=your-email@example.com
 BB_TOKEN=your-api-token
 ```
 
-Get your API token from: https://bitbucket.org/account/settings/app-passwords/
-
-## Usage
+Get an API token from https://bitbucket.org/account/settings/app-passwords/, then run the CLI:
 
 ```bash
-# Development mode
-pnpm bb <command>
-
-# After global link
-bb <command>
+pnpm bb --help
+pnpm bb me
+pnpm bb workspaces
 ```
 
-All commands support `--json` flag for machine-readable output (useful for scripts/agents).
+The `pnpm bb` script loads `.env` automatically.
+
+## Global Use
+
+```bash
+pnpm build
+pnpm link --global
+
+export BB_EMAIL="you@example.com"
+export BB_TOKEN="your-token"
+bb me
+```
+
+The globally linked `bb` command does not load the project `.env`; credentials must be exported in its environment.
+
+All commands support `--json` for machine-readable output used by scripts and agents.
 
 ## Commands
 
