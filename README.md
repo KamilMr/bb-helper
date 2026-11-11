@@ -53,6 +53,16 @@ bb me
 
 The global command does not load the project `.env`; export both credentials first.
 
+## Agent Skill
+
+The repository includes a project skill at [`.agents/skills/bb-cli-helper/SKILL.md`](.agents/skills/bb-cli-helper/SKILL.md). It teaches compatible coding agents to use the CLI in JSON mode, discover identifiers before acting, and handle merges or destructive commands safely.
+
+Pi discovers the skill when started inside this repository. Run `/reload` after changing it in an active session, or invoke it directly:
+
+```text
+/skill:bb-cli-helper list open pull requests in <workspace>/<repo>
+```
+
 ## Current Constraints
 
 - This is an internal helper, not a complete replacement for Bitbucket's web interface.

@@ -2,4 +2,8 @@ node_modules/
 .env
 build/
 .claude/
-.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/bb-cli-helper/
+!.agents/skills/bb-cli-helper/SKILL.md
