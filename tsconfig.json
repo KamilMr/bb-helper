@@ -8,10 +8,10 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "build",
-    "rootDir": "source",
+    "rootDir": "src",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["source"]
+  "include": ["src"]
 }
